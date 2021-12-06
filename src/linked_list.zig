@@ -21,7 +21,7 @@ pub const LinkedList = struct {
         self.sentinel.next = &self.sentinel;
     }
 
-    pub fn push_back(self: *LinkedList, n: *Node) void {
+    pub fn pushBack(self: *LinkedList, n: *Node) void {
         if (n.next != null)
             n.removeFromList();
 
@@ -31,7 +31,7 @@ pub const LinkedList = struct {
         n.next.?.prev = n;
     }
 
-    pub fn pop_front(self: *LinkedList) ?*Node {
+    pub fn popFront(self: *LinkedList) ?*Node {
         var n = self.sentinel.next.?;
         if (n == &self.sentinel)
             return null;
@@ -40,3 +40,21 @@ pub const LinkedList = struct {
         return n;
     }
 };
+
+const assert = @import("std").debug.assert;
+const print = @import("std").debug.print;
+test "Linked list" {
+    var n1 = LinkedList.Node{};
+    var n2 = LinkedList.Node{};
+    var l: LinkedList = undefined;
+    l.init();
+
+    assert(l.popFront() == null);
+
+    l.pushBack(&n1);
+    l.pushBack(&n2);
+
+    assert(l.popFront() == &n1);
+    assert(l.popFront() == &n2);
+    assert(l.popFront() == null);
+}

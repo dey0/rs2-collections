@@ -48,13 +48,9 @@ const LRUQueue = struct {
 pub fn LRUCache(comptime size: usize) type {
     comptime var ht_size = 1;
     comptime {
-        while (true) {
-            var next = ht_size * 2;
-            if (next >= size) break;
-            ht_size = next;
-        }
         while (ht_size + ht_size < size)
             ht_size += ht_size;
+            
     }
 
     return struct {
@@ -88,4 +84,33 @@ pub fn LRUCache(comptime size: usize) type {
             self.queue.enqueue(n);
         }
     };
+}
+
+const expect = @import("std").testing.expect;
+const print = @import("std").debug.print;
+test "LRU queue" {
+    var qn1 = LRUNode{};
+    var qn2 = LRUNode{};
+    var q = LRUQueue{};
+    q.init();
+    try expect(q.dequeue() == null);
+    q.enqueue(&qn1);
+    q.enqueue(&qn2);
+
+    try expect(q.dequeue() == &qn1);
+    try expect(q.dequeue() == &qn2);
+    try expect(q.dequeue() == null);
+}
+
+test "LRU cache" {
+    var cache = LRUCache(8){};
+    cache.init();
+    print("{*}\n", .{&cache});
+
+    var cn1 = LRUNode{};
+    var cn2 = LRUNode{};
+    cache.put(&cn1, 1337);
+    cache.put(&cn2, 1338);
+    try expect(cache.get(1337) == &cn1);
+    try expect(cache.get(1338) == &cn2);
 }

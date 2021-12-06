@@ -5,9 +5,8 @@ pub fn HashTable(comptime size: usize) type {
         buckets: [size]LinkedList = [size].{},
 
         pub fn init(self: *HashTable(size)) void {
-            for (self.buckets) |*el| {
+            for (self.buckets) |*el|
                 el.init();
-            }
         }
 
         pub fn get(self: *HashTable(size), uid: i64) ?*LinkedList.Node {
@@ -19,12 +18,13 @@ pub fn HashTable(comptime size: usize) type {
                     return n;
 
                 n = n.next.?;
-            } else return null;
+            }
+            return null;
         }
 
         pub fn put(self: *HashTable(size), n: *LinkedList.Node, uid: i64) void {
             var list = self.buckets[@intCast(usize, uid) & size - 1];
-            list.push_back(n);
+            list.pushBack(n);
 
             n.uid = uid;
         }

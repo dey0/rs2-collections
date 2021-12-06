@@ -11,17 +11,20 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("rs2-collections", "src/main.zig");
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
-    exe.install();
+    const lib = b.addStaticLibrary("zig-testing", "src/lru_cache.zig");
+    lib.setTarget(target);
+    lib.setBuildMode(mode);
+    lib.install();
 
-    const run_cmd = exe.run();
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    var list_tests = b.addTest("src/linked_list.zig");
+    list_tests.setTarget(target);
+    list_tests.setBuildMode(mode);
 
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
+    var cache_tests = b.addTest("src/lru_cache.zig");
+    cache_tests.setTarget(target);
+    cache_tests.setBuildMode(mode);
+
+    const test_step = b.step("test", "Run library tests");
+    test_step.dependOn(&list_tests.step);
+    test_step.dependOn(&cache_tests.step);
 }
