@@ -5,7 +5,8 @@ pub const LinkedList = struct {
         prev: ?*Node = null,
 
         pub fn removeFromList(self: *Node) void {
-            if (self.prev == null) return;
+            if (self.prev == null)
+                return;
 
             self.prev.?.next = self.next;
             self.next.?.prev = self.prev;

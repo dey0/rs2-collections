@@ -1,16 +1,17 @@
 const LinkedList = @import("linked_list.zig").LinkedList;
-const print = @import("std").debug.print;
 
 pub fn HashTable(comptime size: usize) type {
     return struct {
         buckets: [size]LinkedList = [size].{},
 
-        pub fn init(self: *HashTable(size)) void {
+        const Self = @This();
+
+        pub fn init(self: *Self) void {
             for (self.buckets) |*bucket|
                 bucket.init();
         }
 
-        pub fn get(self: *HashTable(size), uid: i64) ?*LinkedList.Node {
+        pub fn get(self: *Self, uid: i64) ?*LinkedList.Node {
             var list = &self.buckets[@intCast(usize, uid) & size - 1];
 
             var it = list.sentinel.next.?;
@@ -24,7 +25,7 @@ pub fn HashTable(comptime size: usize) type {
             return null;
         }
 
-        pub fn put(self: *HashTable(size), n: *LinkedList.Node, uid: i64) void {
+        pub fn put(self: *Self, n: *LinkedList.Node, uid: i64) void {
             var list = &self.buckets[@intCast(usize, uid) & size - 1];
             list.pushBack(n);
 
@@ -34,7 +35,7 @@ pub fn HashTable(comptime size: usize) type {
 }
 
 const expect = @import("std").testing.expect;
-
+const print = @import("std").debug.print;
 test "Hash table" {
     const size = 8;
     var n1 = LinkedList.Node{};
