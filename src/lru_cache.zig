@@ -8,7 +8,8 @@ pub const LRUNode = struct {
     prev: ?*LRUNode = null,
 
     pub fn removeFromQueue(self: *LRUNode) void {
-        if (self.prev == null) return;
+        if (self.prev == null)
+            return;
 
         self.prev.?.next = self.next;
         self.next.?.prev = self.prev;
@@ -25,7 +26,7 @@ const LRUQueue = struct {
         self.sentinel.next = &self.sentinel;
     }
 
-    pub fn enqueue(self: *LRUQueue, n: *LRUNode) void {
+    pub fn push(self: *LRUQueue, n: *LRUNode) void {
         if (n.next != null)
             n.removeFromQueue();
 
@@ -35,7 +36,7 @@ const LRUQueue = struct {
         n.next.?.prev = n;
     }
 
-    pub fn dequeue(self: *LRUQueue) ?*LRUNode {
+    pub fn pop(self: *LRUQueue) ?*LRUNode {
         var n = self.sentinel.next.?;
         if (n == &self.sentinel)
             return null;
@@ -50,7 +51,6 @@ pub fn LRUCache(comptime size: usize) type {
     comptime {
         while (ht_size + ht_size < size)
             ht_size += ht_size;
-            
     }
 
     return struct {
@@ -58,30 +58,35 @@ pub fn LRUCache(comptime size: usize) type {
         table: HashTable(ht_size) = undefined,
         queue: LRUQueue = .{},
 
-        pub fn init(self: *LRUCache(size)) void {
+        const Self = @This();
+
+        pub fn init(self: *Self) void {
             self.table.init();
             self.queue.init();
         }
 
-        pub fn get(self: *LRUCache(size), uid: i64) ?*LRUNode {
-            var n = self.table.get(uid);
-            if (n == null)
-                return null;
-
-            var lru = @ptrCast(*LRUNode, n.?);
-            self.queue.enqueue(lru);
+        pub fn get(self: *Self, uid: i64) ?*LRUNode {
+            var n = self.table.get(uid) orelse return null;
+            var lru = @ptrCast(*LRUNode, n);
+            self.queue.push(lru);
             return lru;
         }
 
-        pub fn put(self: *LRUCache(size), n: *LRUNode, uid: i64) void {
+        pub fn put(self: *Self, n: *LRUNode, uid: i64) void {
             if (self.free == 0) {
-                var lru = self.queue.dequeue().?;
+                var lru = self.queue.pop().?;
                 lru.ht_node.removeFromList();
             } else {
                 self.free -= 1;
             }
             self.table.put(&n.ht_node, uid);
-            self.queue.enqueue(n);
+            self.queue.push(n);
+        }
+
+        pub fn clear(self: *Self) void {
+            self.free = size;
+            while (self.queue.pop()) |lru|
+                lru.ht_node.removeFromList();
         }
     };
 }
@@ -93,24 +98,32 @@ test "LRU queue" {
     var qn2 = LRUNode{};
     var q = LRUQueue{};
     q.init();
-    try expect(q.dequeue() == null);
-    q.enqueue(&qn1);
-    q.enqueue(&qn2);
+    try expect(q.pop() == null);
+    q.push(&qn1);
+    q.push(&qn2);
 
-    try expect(q.dequeue() == &qn1);
-    try expect(q.dequeue() == &qn2);
-    try expect(q.dequeue() == null);
+    try expect(q.pop() == &qn1);
+    try expect(q.pop() == &qn2);
+    try expect(q.pop() == null);
 }
 
 test "LRU cache" {
-    var cache = LRUCache(8){};
+    const size = 8;
+    var cache = LRUCache(size){};
     cache.init();
-    print("{*}\n", .{&cache});
 
     var cn1 = LRUNode{};
     var cn2 = LRUNode{};
+    print("Node 1: {*} Node 2: {*}\n", .{ &cn1.ht_node, &cn2.ht_node });
     cache.put(&cn1, 1337);
     cache.put(&cn2, 1338);
     try expect(cache.get(1337) == &cn1);
     try expect(cache.get(1338) == &cn2);
+
+    print("Clearing cache...\n", .{});
+    cache.clear();
+
+    try expect(cache.get(1337) == null);
+    try expect(cache.get(1338) == null);
+    try expect(cache.free == size);
 }

@@ -41,7 +41,7 @@ pub const LinkedList = struct {
     }
 };
 
-const assert = @import("std").debug.assert;
+const expect = @import("std").testing.expect;
 const print = @import("std").debug.print;
 test "Linked list" {
     var n1 = LinkedList.Node{};
@@ -49,12 +49,12 @@ test "Linked list" {
     var l: LinkedList = undefined;
     l.init();
 
-    assert(l.popFront() == null);
+    try expect(l.popFront() == null);
 
     l.pushBack(&n1);
     l.pushBack(&n2);
 
-    assert(l.popFront() == &n1);
-    assert(l.popFront() == &n2);
-    assert(l.popFront() == null);
+    try expect(l.popFront() == &n1);
+    try expect(l.popFront() == &n2);
+    try expect(l.popFront() == null);
 }

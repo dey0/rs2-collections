@@ -20,11 +20,16 @@ pub fn build(b: *std.build.Builder) void {
     list_tests.setTarget(target);
     list_tests.setBuildMode(mode);
 
+    var ht_tests = b.addTest("src/hash_table.zig");
+    ht_tests.setTarget(target);
+    ht_tests.setBuildMode(mode);
+
     var cache_tests = b.addTest("src/lru_cache.zig");
     cache_tests.setTarget(target);
     cache_tests.setBuildMode(mode);
 
     const test_step = b.step("test", "Run library tests");
     test_step.dependOn(&list_tests.step);
+    test_step.dependOn(&ht_tests.step);
     test_step.dependOn(&cache_tests.step);
 }
